@@ -1,0 +1,41 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: go-build-and-dockerize
+spec:
+  params:
+    - name: repo
+      description: Url of the repository
+  steps:
+    - name: clone-git
+      image: bitnami/git
+      script: |
+      #! /usr/bin/bash
+      cd /tekton/home
+      git clone $repo
+    - name: build-sources
+      image: go:latest
+      script: |
+      #! /usr/bin/bash
+      cd /tekton/home/go-tekton-build-tutorial
+      go build -o hello_world main.go
+    - name: dockerize-app
+      image: docker:latest
+      script: |
+      #! /usr/bin/bash
+      cd /tekton/home/go-tekton-build-tutorial
+      docker build
+      #docker push
+
+---
+
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  name: go-build-and-dockerize-run
+spec:
+  taskRef:
+    name: go-build-and-dockerize
+    params:
+      - name: repo
+        value: https://github.com/vamsigutta/go-tekton-build-tutorial
